@@ -67,7 +67,7 @@ void fft(complex *x, int N) {
         int m = 1 << s;
         int m2 = m >> 1;
         complex w_m = twiddle_factor(m);
-        int k;
+        int k;  
         for (k = 0; k < N; k += m) {
             complex w = {1.0, 0.0};
             int j;

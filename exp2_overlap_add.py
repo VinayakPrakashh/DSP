@@ -1,20 +1,34 @@
-import numpy as np 
-from scipy.fft import fft, ifft 
-def overlap_add(x, h):
-   N = len(x)   
-   M = len(h)  
-   L = N // 4  
-   P = M + L - 1   
-   H = fft(h, P)   
-   y = np.zeros(N + M - 1) 
-   for i in range(0, N, L): 
-        x_segment = x[i:i+L]  
-        x_segment = np.pad(x_segment, (0, P - len(x_segment)), mode='constant')   
-        Y_segment = ifft(fft(x_segment) * H).real
-        y[i:i+P] += Y_segment 
-   return y 
-x = [1,2,3,4,5,6,7]
-h = [1,1,1]
-y_overlap_add = overlap_add(x, h) 
-print("Output length:", len(y_overlap_add)) 
-print("First few values of output:", y_overlap_add[:10])
+from numpy import *
+
+xn = [1,2,3,4,5,6,7,8,12]
+hn = [1,1,1]
+N = 8# put any values of N
+
+M = len(hn)
+L = N-M+1
+
+def circular_conv(xn,hn):
+    N1=len(xn)
+    N2=len(hn)
+    N = max([N1,N2])
+    xn = pad(xn,(0,(N-N1)))
+    hn = pad(hn,(0,(N-N2)))
+    result = zeros([N,N])
+    for i in range(N):
+        result[:,i] = roll(xn,i)
+    return dot(result,hn)
+
+def overlap_add(xn,hn,M,L):
+    padded_h1 = pad(hn,(0,L-1))
+    splitted_x1 = [xn[i:i+L] for i in range(0,len(xn),L)]
+    padded_x1 = [i+[0]*(M-1) for i in splitted_x1]
+    result_length = len(xn)+len(padded_h1)-1
+    result = zeros(result_length)
+    for i,sublist in enumerate(padded_x1):
+        conv_res = circular_conv(sublist,padded_h1)
+        start_index = i*L
+        end_index = start_index+len(conv_res)
+        result[start_index:end_index]+= conv_res
+    print(result[:len(result)-L+1])
+
+overlap_add(xn,hn,M,L)
