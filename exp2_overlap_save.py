@@ -1,70 +1,34 @@
-import numpy as np
 from numpy import *
-x=[1,2,3,4,5,6,7,8]
-h=[1,-1]
-N=4
-n1=len(x)
-M=len(h)
-L=N-M+1
-if(N!=M):
-  for i in range(M,N):
-    h.append(0)
 
-row_number=n1//L
-if((n1%L)==0):
-  row_number=n1//L 
-else:
-  row_number=n1//L +1
-
-column_number=(M-1)+L
-X=np.zeros((row_number+1,column_number))
-k=0
-for i in range(0,row_number):
-  for j in range(M-1,column_number):
-    X[i][j]=x[k]
-    k=k+1
-    if(k==n1):
-      break
-if X[row_number-1][column_number-1]!=0:
-  
-  for j in range(0,M-1):
-     X[row_number-1+1][j]=x[n1-M+1+j]
-  
-
-for i in range(1,row_number):
-  for j in range (0,(M-1)):
-    if(X[i][j]==0):
-      X[i][j]=X[i-1][j+N-M+1]
-
-
-
-
-
-def find_cir_conv(x1,x2):
-    N1 = len(x1)
-    N2 = len(x2)
-    N =max([N1,N2])
-    
-    x1 = pad(x1, (0, N - len(x1)))
-    x2 = pad(x2, (0, N - len(x2)))
-    conv=zeros((N,N))
-
+xn=[1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+hn=[1,1,1]
+N=8 # put any values of N
+M = len(hn)
+L = N-M+1
+def circular_conv(xn,hn):
+    N1=len(xn)
+    N2=len(hn)
+    N = max([N1,N2])
+    xn = pad(xn,(0,(N-N1)))
+    hn = pad(hn,(0,(N-N2)))
+    result = zeros([N,N])
     for i in range(N):
-        conv[:,i]=roll(x1,i)
-    result = dot(conv,x2)
-    return result
+        result[:,i] = roll(xn,i)
+    return dot(result,hn)
 
-output=[0]*((row_number+1)*column_number)
-for i in range(0,row_number+1):
-   output[i]=find_cir_conv(X[i],h)
-    
-count=0
-y=[0]*(25)
-for i in range(0,row_number+1):
-  for j in range(M-1,column_number):
-    y[count]=output[i][j]
-    count=count+1
-    
-
-y = [int(x) for x in y]
-print("output is:",y[0:n1+M-1])
+def overlap_save(xn,hn,M,L):
+    padded_hn = pad(hn,(0,L-1))
+    print(padded_hn)
+    splitted_x1 = [xn[i:i+L] for i in range(0,len(xn),L)]
+    splitted_x1[0] = [0]*(M-1) + splitted_x1[0]
+    for i in range(1,len(splitted_x1)):
+        splitted_x1[i] = splitted_x1[i-1][-(M-1):]+splitted_x1[i]
+    splitted_x1 = [sublist+[0]*(len(splitted_x1[0])-len(splitted_x1[i])) for i,sublist in enumerate(splitted_x1)]
+    result =[]
+    for sublist in splitted_x1:
+        conv_res = circular_conv(sublist,hn)
+        conv_res = conv_res[M-1:]
+        result.extend(conv_res)
+    result = [int(x) for x in result]
+    return result[:len(xn)+len(hn)-1]
+print(overlap_save(xn,hn,M,L))
