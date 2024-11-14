@@ -24,7 +24,6 @@ def find_cir_conv2(xn,hn):
 
 x1 = eval(input("Enter the input sequence : "))
 x2 = eval(input("Enter the impulse sequence : "))
-print(x1,"    ",x2)
 y = find_cir_conv(x1,x2)
 y2 = find_cir_conv2(x1,x2)
 print("y(n)=",y)
