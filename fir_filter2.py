@@ -3,19 +3,25 @@ import matplotlib.pyplot as plt
 from scipy.signal import freqz
 
 # Function to design FIR filter
-def design_fir_filter(N, wc):
+def design_rectangular(N, wc):
     n = np.arange(-N//2, N//2 + 1)
     h_ideal = np.sinc(wc/np.pi * n)
     rectangular_window = np.ones(N + 1)
     h = h_ideal * rectangular_window
     return h
-
+def design_hamming_window(N,wc):
+    n = np.arange(-N//2, N//2 + 1)
+    h_ideal = np.sinc(wc/np.pi * n)
+    hamming_window = 0.54 - 0.46*np.cos(2*np.pi*n/N)
+    h = h_ideal * hamming_window
+    return h
 # Input parameters
 N = 40
 wc = 0.2 * np.pi
 
 # Design the filter
-h_rectangular = design_fir_filter(N, wc)
+# h_rectangular = design_rectangular(N, wc)
+h_hamming = design_hamming_window(N,wc)
 
 # Function to plot impulse and frequency response
 def plot_responses(h, fs):
@@ -43,4 +49,5 @@ def plot_responses(h, fs):
 
 # Plot the responses
 fs = 2 * np.pi  # Normalized frequency
-plot_responses(h_rectangular, fs)
+# plot_responses(h_rectangular, fs)
+plot_responses(h_hamming, fs)
