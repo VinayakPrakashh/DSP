@@ -9,6 +9,7 @@ N = 20    # Order of filter
 
 n = np.arange(N+1)
 h_ideal = np.sinc(2*fc/fs*(n-N/2))
+
 rectangular_window = np.ones(N+1)
 hamming_window = 0.54 - 0.46*np.cos(2*np.pi*n/N)
 

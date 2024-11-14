@@ -4,8 +4,11 @@ from matplotlib.pyplot import *
 
 def DFT(N):
     x = random.random(N)
+
     n = arange(N)
+    print(n)
     k = n[:,None]
+    print(k)
     e = exp(-2j * pi * k * n / N)
     X = dot(e, x)
     return X
@@ -16,7 +19,7 @@ def custom_fft(N):
 def time_complexity():
     dft_time = []
     fft_time = []
-    gamma = arange(0, 15, 1)
+    gamma = arange(0, 10, 1)
     for i in gamma:
         N = 2**i
         start_time = time.time()
