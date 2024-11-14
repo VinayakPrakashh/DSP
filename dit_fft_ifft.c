@@ -79,20 +79,22 @@ int main() {
     printf("Enter value of N:");
     scanf("%d",&N);
     double real;
+    double imag;
     double complex x[N];
      for (int i = 0; i < N; i++) {
         
         printf("Enter the real part of x[%d]: ", i);
         scanf("%lf", &real);
-        x[i] = real;
+        printf("Enter the imag part of x[%d]: ", i);
+        scanf("%lf", &imag);
+        x[i] = real+imag*I;
     }
     // Perform FFT
     fft(x, N);
+
     ifft(x, N);
-    for (int i = 0; i < N; i++) {
+            for (int i = 0; i < N; i++) {
         print_complex(x[i]);
     }
-    
-    
     return 0;
 }

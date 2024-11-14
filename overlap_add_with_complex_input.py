@@ -2,12 +2,11 @@ from numpy import *
 
 # Function to take complex number input from user
 def input_complex_array(prompt):
-    input_str = input(prompt)
-    return array([complex(num) for num in input_str.split()], dtype=complex)
+    return array([complex(x)for x in input(prompt).split()])
 
 # Taking user input for xn and hn
-xn = input_complex_array("Enter the complex numbers for xn separated by spaces: ")
-hn = input_complex_array("Enter the complex numbers for hn separated by spaces: ")
+xn = input_complex_array("Enter the complex numbers for xn separated by spaces like a+bj c+dj: ")
+hn = input_complex_array("Enter the complex numbers for hn separated by spaces like a+bj c+dj: ")
 N = int(input("Enter the value of N: "))
 
 M = len(hn)
@@ -27,7 +26,7 @@ def circular_conv(xn, hn):
 def overlap_add(xn, hn, M, L):
     padded_h1 = pad(hn, (0, L - 1), 'constant', constant_values=(0,))
     splitted_x1 = [xn[i:i + L] for i in range(0, len(xn), L)]
-    padded_x1 = [list(i) + [0] * (M - 1) for i in splitted_x1]
+    padded_x1 = [i + [0] * (M - 1) for i in splitted_x1]
     result_length = len(xn) + len(padded_h1) - 1
     result = zeros(result_length, dtype=complex)
     for i, sublist in enumerate(padded_x1):
