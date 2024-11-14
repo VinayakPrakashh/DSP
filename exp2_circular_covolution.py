@@ -13,8 +13,8 @@ def find_cir_conv(x1,x2):
         conv[:,i]=roll(x1,i)
     result = dot(conv,x2)
     return result
-x1 = eval(input("Enter the input sequence   : "))
-x2 = eval(input("Enter the impulse sequence : "))
+x1 = eval(input("Enter the input sequence like [1,2,3]: "))
+x2 = eval(input("Enter the impulse sequence like [2,3,4]: "))
 y = find_cir_conv(x1,x2)
 
 print("y(n)=",y)
