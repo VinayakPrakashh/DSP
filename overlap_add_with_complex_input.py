@@ -1,14 +1,9 @@
 from numpy import *
 
-# Function to take complex number input from user
-def input_complex_array(prompt):
-    return array([complex(x)for x in input(prompt).split()])
-
 # Taking user input for xn and hn
-xn = input_complex_array("Enter the complex numbers for xn separated by spaces like a+bj c+dj: ")
-hn = input_complex_array("Enter the complex numbers for hn separated by spaces like a+bj c+dj: ")
+xn = list(eval(input("Enter the complex numbers for xn separated by spaces like a+bj,c+dj: ")))
+hn = list(eval(input("Enter the complex numbers for hn separated by spaces like a+bj,c+dj: ")))
 N = int(input("Enter the value of N: "))
-
 M = len(hn)
 L = N - M + 1
 
@@ -18,7 +13,7 @@ def circular_conv(xn, hn):
     N = max([N1, N2])
     xn = pad(xn, (0, (N - N1)), 'constant', constant_values=(0,))
     hn = pad(hn, (0, (N - N2)), 'constant', constant_values=(0,))
-    result = zeros([N, N], dtype=complex)
+    result = zeros((N, N), dtype=complex)
     for i in range(N):
         result[:, i] = roll(xn, i)
     return dot(result, hn)
