@@ -13,8 +13,9 @@ def fir_rectangular(N,wc):
     h = hn*window_func
     return h
 def fir_hamming(N,wc):
+    fc = wc/(2*pi)
     n =arange(N+1)
-    hn =  np.sinc(2*100/fs*(n-N/2))
+    hn =  np.sinc(2*fc/fs*(n-N/2))
     hamming_window = 0.54 - 0.46 * np.cos(2 * np.pi * n / N)
     h = hn*hamming_window
     return h
