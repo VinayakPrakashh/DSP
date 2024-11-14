@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 # Define the ramp function
 def ramp(t):
-    return np.where(t >= 0, t, 0)
+    return np.where(t>=0,t,0)
 
 # Define the time range
 t = np.linspace(-1, 5, 1000)
