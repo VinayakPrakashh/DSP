@@ -1,1 +1,1 @@
-print(h_ideal)
+H_rectangular
