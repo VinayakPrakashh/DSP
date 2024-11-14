@@ -6,8 +6,9 @@ wc = 0.2*pi
 fs =1000
 n =arange(N+1)
 def fir_rectangular(N,wc):
+    fc = wc/(2*pi)
     n =arange(N+1)
-    hn =  np.sinc(2*100/fs*(n-N/2))
+    hn =  np.sinc(2*fc/fs*(n-N/2))
     window_func = ones(N+1)
     h = hn*window_func
     return h
