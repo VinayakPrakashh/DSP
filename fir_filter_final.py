@@ -2,48 +2,33 @@ from numpy import *
 from matplotlib.pyplot import *
 from scipy.signal import freqz
 N = 40
-wc = 0.2*pi
-fs =1000
-n =arange(N+1)
-def fir_rectangular(N,wc):
-    fc = wc/(2*pi)
-    n =arange(N+1)
-    hn =  np.sinc(2*fc/fs*(n-N/2))
-    window_func = ones(N+1)
-    h = hn*window_func
-    return h
+wc = 2*pi*100
+fs = 1000
+n  = arange(N+1)
+def rectangular(N,wc):
+    fc = wc/(pi*2)
+    n = arange(N+1)
+    hn = sinc(2*fc/fs*(n-N/2))
+    rectangular = ones(N+1)
+    h_rect = hn * rectangular
+    return h_rect
 def fir_hamming(N,wc):
-    fc = wc/(2*pi)
-    n =arange(N+1)
-    hn =  np.sinc(2*fc/fs*(n-N/2))
-    hamming_window = 0.54 - 0.46 * np.cos(2 * np.pi * n / N)
-    h = hn*hamming_window
-    return h
-h_rect = fir_rectangular(N,wc)
+    fc = wc/(pi*2)
+    n = arange(N+1)
+    hn = sinc(2*fc/fs*(n-N/2))
+    hamming = 0.54 - 0.46 *cos(2*pi*n/N)
+    h_ham = hn * hamming
+    return h_ham
+h_rect = rectangular(N,wc)
 h_hamming = fir_hamming(N,wc)
 
 w,H = freqz(h_rect,worN=8000)
-w2,H2 =freqz(h_hamming,worN=8000)
-f = w*fs/(2*pi) #hz
-f2 = w2*fs/(2*pi) #hz
-subplot(1,2,1)
-plot(f,20*log10(abs(H)),label='Rectangular Window')
-plot(f2,20*log10(abs(H2)),label='Hamming Window')
-xlabel('Frequency (Hz)')
-ylabel('Magnitude (dB)')
-title('Frequency response')
-legend()
-subplot(1,2,2)
-stem(n, h_rect, label='Rectangular Window')
-stem(n, h_hamming, label='Hamming Window')
-xlabel('Sample Index')
-ylabel('Amplitude')
-title('Impulse Response of Rectangular and Hamming Windows')
+w2,H2 = freqz(h_hamming,worN=8000)
+f = w*fs /2*pi
+f2 = w2*fs /2*pi
+plot(f,20*log10(abs(H)),label='rect')
+plot(f2,20*log10(abs(H2)),label='hamming')
 legend()
 show()
-plot(f,abs(H),label='Rectangular Window')
-plot(f2,abs(H2),label='Hamming Window')
-xlabel('Frequency (Hz)')
-ylabel('Magnitude')
-title('Linear Magnitude Frequency Response')
-show()
+
+plot()

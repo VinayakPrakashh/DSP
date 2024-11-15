@@ -1,8 +1,8 @@
 from numpy import *
 
 # Taking user input for xn and hn
-xn = list(eval(input("Enter the complex numbers for xn separated by spaces like a+bj,c+dj: ")))
-hn = list(eval(input("Enter the complex numbers for hn separated by spaces like a+bj,c+dj: ")))
+xn = [1+1j, 2+2j, 3+3j, 6+4j, 5+5j, 2+6j, 7+7j, 8+8j, 9+9j, 2+2j, 3+3j, 4+4j, 5+5j, 6+6j, 7+7j]
+hn = [1+1j, 1+1j, 1+1j]
 N = int(input("Enter the value of N: "))
 M = len(hn)
 L = N-M+1

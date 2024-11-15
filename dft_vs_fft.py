@@ -6,9 +6,7 @@ def DFT(N):
     x = random.random(N)
 
     n = arange(N)
-    print(n)
     k = n[:,None]
-    print(k)
     e = exp(-2j * pi * k * n / N)
     X = dot(e, x)
     return X

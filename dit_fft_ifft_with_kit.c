@@ -43,12 +43,13 @@ complex twiddle_factor_2(int N) {
     complex w = {cos(2 * M_PI / N), sin(2 * M_PI / N)};
     return w;
 }
-void bit_reverse(complex *x, int N) {
-    int i, j, k;
+void bit_reverse(complex *x,int N){
+    int i,j,k;
     complex temp;
-    for (i = 1, j = 0; i < N; i++) {
-        for (k = N >> 1; k > (j ^= k); k >>= 1);
-        if (i < j) {
+    for(i=1,j=0;i<N;i++){
+
+        for(k=N>>1;k>(j^=k);k>>=1);
+        if(i<j){
             temp = x[i];
             x[i] = x[j];
             x[j] = temp;
@@ -59,9 +60,9 @@ void bit_reverse(complex *x, int N) {
 void fft(complex *x, int N) {
     bit_reverse(x, N);
    int S = 0;
-    for (int i = N; i > 1; i >>= 1) {
-        S++;
-    }
+for(int i=N;i>1;i>>=1){
+    S++;
+}
     	int s;
     for (s = 1; s <= S; s++) {
         int m = 1 << s;
