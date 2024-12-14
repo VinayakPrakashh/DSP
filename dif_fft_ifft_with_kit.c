@@ -58,9 +58,9 @@ void bit_reverse(complex *x, int N) {
 
 void dif_fft(complex *x, int N) {
    int s = 0;
-    for (int i = N; i > 1; i >>= 1) {
-        s++;
-    }
+for(int i=N;i>1;i>>=1){
+    s++;
+}
 
     for (s; s >= 1; s--) { // Outer loop: stages
         int m = 1 << s; // m = 2^s

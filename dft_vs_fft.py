@@ -7,8 +7,8 @@ def DFT(N):
 
     n = arange(N)
     k = n[:,None]
-    e = exp(-2j * pi * k * n / N)
-    X = dot(e, x)
+    e = exp(-2j*pi*n*k/N)
+    X = dot(e,x)
     return X
 def custom_fft(N):
     x = random.random(N)
