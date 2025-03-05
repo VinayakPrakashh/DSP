@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import norm
 
-r = 73  # Mean (Roll number)
+r = 74  # Mean (Roll number)
 sigma2 = 1  # Variance
 
 sigma = np.sqrt(sigma2)  # Standard deviation

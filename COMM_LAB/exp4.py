@@ -18,7 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Define parameters
-r= 73 #roll number
+r= 74 #roll number
 modr = (r % 5) + 1  #mod(r,5) + 1
 fs = 32000 #fm=4, nyquist=2*4=8, 4times nyquist=4*8=32
 t = np.linspace(0, 1, fs)  # Time vector=time b/w 0,1
