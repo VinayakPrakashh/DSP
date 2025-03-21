@@ -1,75 +1,102 @@
-import cv2
 import numpy as np
+import cv2
 import matplotlib.pyplot as plt
-from scipy import special
-
-# Function to add AWGN noise
-def add_awgn_noise(signal, snr_db):
-    """Add AWGN noise to the modulated BPSK signal"""
-    snr_linear = 10 ** (snr_db / 10)  # Convert SNR from dB to linear scale
-    noise_power = np.var(signal) / snr_linear  # Assume signal power = 1
-    noise = np.sqrt(noise_power / 2) * (np.random.randn(len(signal)) + 1j * np.random.randn(len(signal)))
-    return signal + noise
-
-# Step 1: Read and process the image
-image = cv2.imread('"D:\cameraman.png"', cv2.IMREAD_GRAYSCALE)
+import scipy.special
+from google.colab import files
+# Step 1: Read and Resize Image to 256x256
+uploaded = files.upload()
+image = cv2.imread("cameraman.png", cv2.IMREAD_GRAYSCALE)
+rows, cols = image.shape
 plt.imshow(image, cmap='gray')
-plt.title('Original Image')
-plt.axis('off')
 plt.show()
 
-# Convert image to binary bit stream
-flattened_image = image.flatten()  # Convert 2D image to 1D array
-bit_array = np.unpackbits(flattened_image)  # Convert pixel values to binary bits``
+# Step 2: Convert Image to 1D Array
+image_1d = image.flatten()
 
-# Step 2: BPSK Modulation (Mapping bits: 0 → 1, 1 → -1)
-modulated_signal = -2 * bit_array + 1
+# Step 3: Convert Each Pixel to 8-bit Binary
+binary_array = np.array([format(pixel, '08b') for pixel in image_1d])
 
-# Plot constellation diagram of transmitted BPSK signal
-plt.scatter(np.real(modulated_signal), np.imag(modulated_signal))
-plt.title('Constellation Diagram (BPSK Transmitted Signal)')
+# Convert Binary Strings to 1D Bit Array
+binary_bits = np.array([int(bit) for binary in binary_array for bit in binary])
+
+# Step 4: BPSK Mapping (0 → +1, 1 → -1)
+bpsk_symbols = 1 - 2 * binary_bits  
+
+# Step 5: Plot the Constellation Diagram (Transmitted)
+plt.figure(figsize=(6, 6))
+plt.scatter(bpsk_symbols, np.zeros_like(bpsk_symbols), marker='o', color='blue', s=100)
+plt.title("BPSK Constellation Diagram (Transmitted Signal)")
+plt.xlabel("In-phase")
+plt.ylabel("Quadrature")
+plt.xlim(-2, 2)
+plt.ylim(-0.1, 0.1)
 plt.grid()
 plt.show()
 
-# Step 3: Transmission over AWGN Channel and BER Calculation
-snr_db_values = np.arange(-10, 11, 1)  # SNR from -10dB to 10dB
-ber_values = []
+# Define SNR range
+snr_db_range = np.arange(-10, 11, 2)  # From -10 dB to 10 dB in steps of 2
 theoretical_ber = []
+simulated_ber = []
 
-for snr_db in snr_db_values:
-    # Transmit signal with AWGN
-    received_signal = add_awgn_noise(modulated_signal, snr_db)
-
-    # Plot received constellation diagram for each SNR value
-    plt.scatter(np.real(received_signal), np.imag(received_signal))
-    plt.title(f'Constellation Diagram (SNR = {snr_db} dB)')
+for snr_db in snr_db_range:
+    snr_linear = 10 ** (snr_db / 10)
+    noise_std = np.sqrt(1 / (2 * snr_linear))
+    
+    # Generate Complex Gaussian Noise
+    noise = noise_std * (np.random.randn(len(bpsk_symbols)) + 1j * np.random.randn(len(bpsk_symbols)))
+    
+    # Add Noise to BPSK Symbols
+    received_signal = bpsk_symbols + noise
+    
+    # Plot Received Constellation Diagram
+    plt.figure(figsize=(6, 6))
+    plt.scatter(received_signal.real, received_signal.imag, marker='o', color='b')
+    plt.title(f"BPSK Constellation Diagram (Received Signal, SNR={snr_db} dB)")
+    plt.xlabel("In-phase")
+    plt.ylabel("Quadrature")
+    plt.xlim(-10, 10)
+    plt.ylim(-10, 10)
     plt.grid()
     plt.show()
-
-    # Step 4: Demodulation and BER Calculation
-    received_bits = (np.real(received_signal) <= 0).astype(int)
-    bit_errors = np.sum(bit_array != received_bits)
-    ber = bit_errors / len(bit_array)
-    ber_values.append(ber)
-
-    # Theoretical BER for BPSK in AWGN
-    theoretical_ber.append(0.5 * special.erfc(np.sqrt(10 ** (snr_db / 10))))
-
-    # Step 5: Reconstructing the image from received bits
-    received_pixels = np.packbits(received_bits)[:image.size]
-    received_image = received_pixels.reshape(image.shape)
     
-    plt.imshow(received_image, cmap='gray')
-    plt.title(f'Reconstructed Image at SNR = {snr_db} dB')
-    plt.axis('off')
+    # Decision Rule: BPSK Demodulation
+    decoded_symbols = np.where(received_signal >= 0, 1, -1)
+    
+    # Convert Symbols Back to Bits
+    decoded_bits = ['0' if symbol == 1 else '1' for symbol in decoded_symbols]
+    
+    # Convert Binary Bits Back to 8-bit Values
+    decoded_binary_values = ["".join(decoded_bits[i:i+8]) for i in range(0, len(decoded_bits), 8)]
+    decoded_pixel_values = np.array([int(b, 2) for b in decoded_binary_values if len(b) == 8], dtype=np.uint8)
+    
+    # Reshape Back to Image Dimensions
+    decoded_image = decoded_pixel_values.reshape(256, 256)
+    
+    # Show Reconstructed Image
+    plt.figure(figsize=(6, 6))
+    plt.imshow(decoded_image, cmap='gray')
+    plt.title(f"Reconstructed Image (SNR={snr_db} dB)")
+    plt.axis("off")
     plt.show()
+    
+    # Compute BER
+    original_bits = [bit for binary in binary_array for bit in binary]  # Flatten original bits
+    bit_errors = sum(1 for o, d in zip(original_bits, decoded_bits) if o != d)
+    ber_sim = bit_errors / len(original_bits)
+    ber_theo = scipy.special.erfc(np.sqrt(2 * snr_linear)) / 2
+    
+    simulated_ber.append(ber_sim)
+    theoretical_ber.append(ber_theo)
+    
+    print(f"SNR: {snr_db} dB, Simulated BER: {ber_sim}, Theoretical BER: {ber_theo}")
 
-# Step 6: Plot SNR vs BER
-plt.semilogy(snr_db_values, ber_values, 'o-', label='Practical BER')
-plt.semilogy(snr_db_values, theoretical_ber, 's--', label='Theoretical BER')
-plt.xlabel('SNR (dB)')
-plt.ylabel('Bit Error Rate (BER)')
-plt.title('SNR vs BER')
-plt.grid(True, which='both')
+# Plot SNR vs BER
+plt.figure(figsize=(8, 6))
+plt.semilogy(snr_db_range, simulated_ber, 'ro-', label='Simulated BER')
+plt.semilogy(snr_db_range, theoretical_ber, 'b*-', label='Theoretical BER')
+plt.xlabel("SNR (dB)")
+plt.ylabel("Bit Error Rate (BER)")
+plt.title("SNR vs BER for BPSK")
 plt.legend()
+plt.grid(True, which='both', linestyle='--')
 plt.show()

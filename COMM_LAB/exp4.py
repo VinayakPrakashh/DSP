@@ -10,8 +10,6 @@ Description: Program to
 Author: VINAYAK PRAKASH
 Date: 27/02/2025
 """
-# Student Information
-print("prasoon pradeep")
 print("Roll No:73")
 
 import numpy as np
@@ -68,15 +66,17 @@ plt.ylabel("SQNR (dB)")
 plt.title("Signal-to-Quantization Noise Ratio vs Number of Bits")
 plt.grid(True)
 plt.show()
+# PCM Modulation for L = 32
+L_pcm = 32
+minval, maxval = np.min(s), np.max(s)
+stepsize = (maxval - minval) / (L_pcm - 1)
+quantizedsignal_pcm = np.round((s - minval) / stepsize) * stepsize + minval
 
-# PCM Encoding for L = 32
-L = 32
-stepsize = (maxval - minval) / (L - 1)
-quantized_signal = np.round((s - minval) / stepsize).astype(int)  # Convert to integer levels
+# Binary encoding
+pcm_encoded = ((quantizedsignal_pcm - minval) / stepsize).astype(int)
+pcm_binary = [np.binary_repr(val, width=int(np.log2(L_pcm))) for val in pcm_encoded]
 
-# Convert to binary representation
-N = int(np.log2(L))#Determines number of bits for PCM encoding
-pcm_encoded = [format(val, f'0{N}b') for val in quantized_signal]#Converts integer levels to binary strings,format(val, f'0{N}b') converts the integer val to an N-bit binary string,Pad with leading zeros if necessary.
-print("First 10 PCM Encoded Samples:")
+# Display first 10 PCM encoded values as an example
+print("First 10 PCM encoded values:")
 for i in range(10):
-    print(f"Sample {i+1}: {pcm_encoded[i]}")
+    print(f"Sample {i}: {pcm_binary[i]}")
