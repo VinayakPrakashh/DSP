@@ -65,7 +65,7 @@ print("Original Data:", data)
 encoded_data = encodeData(data, Divisor)
 
 # Simulate transmission (no error introduced)
-received_data = encoded_data
+received_data = "110101011"
 print("Received Data:", received_data)
 
 decodeData(received_data, Divisor)
