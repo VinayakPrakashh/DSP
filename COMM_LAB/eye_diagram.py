@@ -1,79 +1,80 @@
 import numpy as np
 import cv2
-from scipy.signal import convolve
 import matplotlib.pyplot as plt
+from scipy.signal import convolve
+
+def raised_cosine_filter(beta, L, Nsym):
+    """Generates a Raised Cosine Filter"""
+    t = np.arange(-Nsym / 2, Nsym / 2 + 1 / L, 1 / L)
+    sinc_part = np.sinc(t)
+    cos_part = np.cos(np.pi * beta * t)
+    denom = 1 - (2 * beta * t) ** 2
+    p = sinc_part * cos_part
+    p[denom != 0] /= denom[denom != 0]  # Avoid division by zero
+    return p / np.sqrt(np.sum(p ** 2))  # Normalize energy
+
+# Read the image
+image = cv2.imread('D:/cameraman.png', cv2.IMREAD_GRAYSCALE)
+assert image is not None, "Image not found!"
+
+# Convert pixel values to bits and map to BPSK symbols
+bits = np.unpackbits(image)
+bpsk_symbols = 2 * bits - 1  # Map 0 -> -1, 1 -> 1
 
 # Parameters
-L = 4                   # Upsampling factor
-T_sym = 1               # Symbol time
-N_sym = 8               # Pulse shaping filter length in symbols
-SNR = 10                # Signal-to-noise ratio (dB)
-nTraces = 100           # Number of traces for eye diagram
-nSamples = 3 * L        # Number of samples per trace
+L = 4  # Upsampling factor
+Tsym = 1  # Symbol duration
+Nsym = 8  # Filter length in symbols
+SNR_values = [-10, -5, 5, 10]
+beta_values = [0.2, 0.8]
 
-# 1️⃣ **SRRC Pulse Shaping Filter**
-def srrc_pulse(T_sym, L, N_sym, beta=0.25):
-    """Generate SRRC pulse shaping filter."""
-    t = np.arange(-N_sym / 2, N_sym / 2, 1 / L)
-    p = np.zeros_like(t)
-    
-    for i in range(len(t)):
-        if t[i] == 0:
-            p[i] = (1 - beta) + 4 * beta / np.pi
-        elif np.abs(t[i]) == T_sym / (4 * beta):
-            p[i] = (beta / np.sqrt(2)) * (
-                (1 + 2 / np.pi) * np.sin(np.pi / (4 * beta)) +
-                (1 - 2 / np.pi) * np.cos(np.pi / (4 * beta))
-            )
-        else:
-            num = np.sin(np.pi * t[i] * (1 - beta) / T_sym) + \
-                  4 * beta * t[i] / T_sym * np.cos(np.pi * t[i] * (1 + beta) / T_sym)
-            denom = np.pi * t[i] / T_sym * (1 - (4 * beta * t[i] / T_sym)**2)
-            p[i] = num / denom
+fig, axes = plt.subplots(len(SNR_values), len(beta_values) * 2, figsize=(24, 12))
 
-    return p / np.sqrt(T_sym)
+for i, SNR in enumerate(SNR_values):
+    for j, beta in enumerate(beta_values):
+        print(f"Processing SNR={SNR} dB, Beta={beta}")
+        
+        # Generate Raised Cosine filter
+        p = raised_cosine_filter(beta, L, Nsym)
+        
+        # Upsampling
+        upsampled_symbols = np.zeros(L * len(bpsk_symbols))
+        upsampled_symbols[::L] = bpsk_symbols
+        
+        # Pulse shaping
+        shaped_signal = convolve(upsampled_symbols, p, mode='same')
+        
+        # Add Gaussian noise
+        noise_power = 1 / (2 * (10 ** (SNR / 10)))
+        noise = np.sqrt(noise_power) * (np.random.randn(len(shaped_signal)) + 1j * np.random.randn(len(shaped_signal)))
+        received_signal = shaped_signal + noise
+        
+        # Matched filtering
+        g = p[::-1]  # Matched filter
+        matched_output = convolve(received_signal, g, mode='same')
+        
+        # Downsampling and demapping
+        downsampled_output = matched_output[::L]
+        demapped_bits = (downsampled_output.real > 0).astype(np.uint8)
+        
+        # Convert bits to pixel values
+        received_image = np.packbits(demapped_bits).reshape(image.shape)
+        
+        # Plot Reconstructed Image
+        axes[i, j * 2].imshow(received_image, cmap='gray')
+        axes[i, j * 2].set_title(f"Reconstructed Image (SNR={SNR} dB, Beta={beta})", fontsize=10)
+        axes[i, j * 2].axis('off')
+        
+        # Plot Eye Diagram
+        nSamples = 3 * L
+        nTraces = 100
+        samples = downsampled_output[:nSamples * nTraces].reshape(nTraces, nSamples)
+        for trace in samples:
+            axes[i, j * 2 + 1].plot(trace, color='orange', alpha=0.7)
+        axes[i, j * 2 + 1].set_title(f'Eye Diagram (SNR={SNR} dB, Beta={beta})', fontsize=10)
+        axes[i, j * 2 + 1].grid(True)
+        axes[i, j * 2 + 1].set_xticks([])
+        axes[i, j * 2 + 1].set_yticks([])
 
-# 2️⃣ **Load and Convert Image to Bits**
-# Use a sample image
-image = cv2.imread("D:/cameraman.png", cv2.IMREAD_GRAYSCALE)
-img_flat = image.flatten()
-bits = np.unpackbits(img_flat)
-
-# 3️⃣ **BPSK Modulation**
-bpsk_symbols = 2 * bits - 1
-
-# 4️⃣ **Upsample by inserting L-1 zeros**
-upsampled = np.zeros(len(bpsk_symbols) * L)
-upsampled[::L] = bpsk_symbols
-
-# 5️⃣ **Pulse Shaping**
-srrc_filter = srrc_pulse(T_sym, L, N_sym)
-tx_signal = convolve(upsampled, srrc_filter, mode='same')
-
-# 6️⃣ **Add Gaussian Noise**
-noise_power = np.mean(tx_signal**2) / (10**(SNR / 10))
-noise = np.sqrt(noise_power / 2) * (np.random.randn(len(tx_signal)) + 1j * np.random.randn(len(tx_signal)))
-rx_signal = tx_signal + noise
-
-# 7️⃣ **Matched Filtering**
-matched_output = convolve(rx_signal, srrc_filter, mode='same')
-
-# 8️⃣ **Downsampling**
-delay = (N_sym * L - 1) // 2
-downsampled = matched_output[delay::L].real
-
-# 9️⃣ **Plot Eye Diagram**
-fig, ax = plt.subplots(figsize=(12, 6))
-
-# Generate eye diagram traces
-for i in range(nTraces):
-    start = np.random.randint(0, len(tx_signal) - nSamples)
-    trace = matched_output[start: start + nSamples].real
-    ax.plot(trace, color='b', alpha=0.3)
-
-# Display the eye diagram
-ax.set_title('Eye Diagram of BPSK Signal')
-ax.set_xlabel('Time (samples)')
-ax.set_ylabel('Amplitude')
-ax.grid(True)
+plt.subplots_adjust(wspace=0.3, hspace=0.3)
 plt.show()
