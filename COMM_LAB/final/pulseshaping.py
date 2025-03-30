@@ -3,10 +3,6 @@ import cv2
 import matplotlib.pyplot as plt
 from scipy.signal import convolve
 
-print("Name: Vinayak")
-print("Class: S6 ECE")
-print("Roll no: 59")
-
 def srrc_pulse(Tsym, beta, L, Nsym):
     """Generates a Square-Root Raised Cosine (SRRC) pulse while handling singularities."""
     t = np.arange(-Nsym / 2, Nsym / 2, 1 / L)
@@ -30,7 +26,7 @@ def srrc_pulse(Tsym, beta, L, Nsym):
 def upsample_and_filter(symbols, pulse, L):
     """Upsamples the symbols and applies the SRRC filter."""
     upsampled = np.zeros(len(symbols) * L)
-    upsampled[::L] = symbols
+    upsampled[::L] = symbols    
     return convolve(upsampled, pulse, mode='full')
 
 def add_awgn(signal, snr_db):
@@ -98,5 +94,7 @@ def simulate_pulse_shaping():
     plt.grid(True, which='both')
     plt.legend()
     plt.show()
+
+
 
 simulate_pulse_shaping()

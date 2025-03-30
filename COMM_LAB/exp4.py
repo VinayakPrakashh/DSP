@@ -1,16 +1,3 @@
-"""
-Program: Pulse code modulation
-Description: Program to 
-1. Generate raised sine wave of equation in question by sampling it at four times the Nyquist rate
-  Quantize the samples of s(t) with L = 4, 8, 16, 32, 64 where L is the number of quantization levels.
-2. Compute the signal to quantization noise ratio and plot it against N, where N = log2(L)
-  is the number of bits used for quantization.
-3. Generate the PCM modulated output for L = 32 using binary encoding
-
-Author: VINAYAK PRAKASH
-Date: 27/02/2025
-"""
-print("Roll No:73")
 
 import numpy as np
 import matplotlib.pyplot as plt
