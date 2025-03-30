@@ -47,7 +47,7 @@ for snr_db in snr_db_range:
     noise_std = np.sqrt(1 / (2 * snr_linear))
     
     # Generate Complex Gaussian Noise
-    noise =          * (np.random.randn(len(bpsk_symbols)) + 1j * np.random.randn(len(bpsk_symbols)))
+    noise =      noise_std    * (np.random.randn(len(bpsk_symbols)) + 1j * np.random.randn(len(bpsk_symbols)))
     
     # Add Noise to BPSK Symbols
     received_signal = bpsk_symbols + noise
