@@ -8,7 +8,7 @@ image = cv2.imread("D:/cameraman.png", cv2.IMREAD_GRAYSCALE)
 
 # Convert each pixel to 8-bit binary and flatten to a single bitstream
 binary_bits = np.unpackbits(image).astype(np.int8)  # Convert to int8 for correct BPSK mapping
-
+print(binary_bits[0:20])
 # BPSK Mapping: 0 → +1, 1 → -1
 bpsk_symbols = 1 - 2 * binary_bits  # 0 → +1, 1 → -1
 
@@ -29,7 +29,7 @@ for snr_db in snr_db_range:
     noise_power = signal_power / snr_linear
 
     # Generate complex Gaussian noise
-    noise = np.sqrt(noise_power / 2) * (np.random.randn(len(bpsk_symbols)) + 1j * np.random.randn(len(bpsk_symbols)))
+    noise = np.sqrt(noise_power / 2) * (    np.random.randn(len(bpsk_symbols)) + 1j * np.random.randn(len(bpsk_symbols)))
 
     # Transmit signal with noise
     received_signal = bpsk_symbols + noise
