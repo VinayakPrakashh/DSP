@@ -28,7 +28,7 @@ for i in L:
     quantizationerror = s - quantizedsignal
     signal_power = np.mean(s ** 2)
     noise_power = np.mean(quantizationerror ** 2)
-    SQNR = 10 * np.log10(signal_power / noise_power)#Converts power ratio to decibels (dB)
+    SQNR = 6.02*np.log2(i)+1.76
     SQNR_values.append(SQNR)
 
     # Plot quantized signals for visualization

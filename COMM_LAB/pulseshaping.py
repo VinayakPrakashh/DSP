@@ -49,6 +49,23 @@ def downsample_and_demodulate(received_signal, pulse, L, num_bits):
     
     # Ensure the correct number of bits
     return detected_symbols[:num_bits]
+def plot_eye_diagram(signal, L, num_symbols=2):
+    """Plots an eye diagram for the given signal."""
+    samples_per_symbol = L
+    segment_length = num_symbols * samples_per_symbol
+    num_segments = len(signal) // samples_per_symbol - num_symbols + 1
+
+    plt.figure()
+    for i in range(num_segments):
+        start = i * samples_per_symbol
+        end = start + segment_length
+        plt.plot(signal[start:end], color='blue', alpha=0.5)
+
+    plt.title("Eye Diagram")
+    plt.xlabel("Sample Index")
+    plt.ylabel("Amplitude")
+    plt.grid(True)
+    plt.show()
 
 def simulate_pulse_shaping():
     """Runs the full pulse shaping simulation and plots SNR vs BER."""
@@ -88,7 +105,7 @@ def simulate_pulse_shaping():
         plt.title(f'Reconstructed Image at SNR={snr} dB')
         plt.axis('off')
         plt.show()
-
+    plot_eye_diagram(transmitted_signal, L)
     # Plot SNR vs BER Curve
     plt.figure()
     plt.semilogy(snr_values, ber_values, 'o-', label="Simulated BER")
