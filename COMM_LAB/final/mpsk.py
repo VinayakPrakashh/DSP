@@ -62,7 +62,7 @@ for M in M_values:
     bit_stream = np.unpackbits(img.flatten())
     bit_stream = bit_stream[:len(bit_stream) - (len(bit_stream) % bits_per_symbol)]  # Ensure correct length
     transmitted_symbols = modulate(bit_stream, M)
-    
+    print(transmitted_symbols)
     BER_sim = []
     SER_sim = []
     
