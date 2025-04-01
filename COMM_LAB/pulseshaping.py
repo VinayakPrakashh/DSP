@@ -11,7 +11,7 @@ def srrc_pulse(Tsym, beta, L, Nsym):
     """Generates a Square-Root Raised Cosine (SRRC) pulse while handling singularities."""
     t = np.arange(-Nsym / 2, Nsym / 2, 1 / L)
     p = np.zeros_like(t)
-    
+
     for i in range(len(t)):
         if t[i] == 0:
             p[i] = (1 - beta + 4 * beta / np.pi) / np.sqrt(Tsym)
