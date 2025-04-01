@@ -27,10 +27,12 @@ def add_noise(signal,snr,bps):
   noise_std = sqrt(1/(2*bps*snr))
   noise = noise_std * (random.randn(*signal.shape) + 1j*random.randn(*signal.shape))
   return signal+noise
+
 def decode(bits,M):
   angles = angle(bits)
   decoded_symbols = round((angles/(2*pi))*M) %M
   return decoded_symbols.astype(int)
+
 def theoretical_ber(M, snr_db):
     k = np.log2(M)
     return erfc(np.sqrt(k * 10**(snr_db / 10)) / np.sqrt(2)) / k
@@ -40,6 +42,8 @@ def theoretical_ser(M, snr_db):
 
 BER_res = {}
 SER_res = {}
+
+
 for M_values in M:
   bits_per_symbol = int(log2(M_values))
   bitstream = unpackbits(image.flatten())
