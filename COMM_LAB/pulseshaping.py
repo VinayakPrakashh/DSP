@@ -30,6 +30,7 @@ def srrc_pulse(Tsym, beta, L, Nsym):
 def upsample_and_filter(symbols, pulse, L):
     """Upsamples the symbols and applies the SRRC filter."""
     upsampled = np.zeros(len(symbols) * L)
+    print(np.size(upsampled))
     upsampled[::L] = symbols
     return convolve(upsampled, pulse, mode='full')
 
@@ -105,7 +106,6 @@ def simulate_pulse_shaping():
         plt.title(f'Reconstructed Image at SNR={snr} dB')
         plt.axis('off')
         plt.show()
-    plot_eye_diagram(transmitted_signal, L)
     # Plot SNR vs BER Curve
     plt.figure()
     plt.semilogy(snr_values, ber_values, 'o-', label="Simulated BER")
