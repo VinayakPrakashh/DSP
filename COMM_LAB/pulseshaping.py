@@ -99,7 +99,6 @@ def simulate_pulse_shaping():
         errors = np.sum(recovered_bits != bits)
         ber = errors / len(bits)
         ber_values.append(ber)
-
         # Plot the reconstructed image
         plt.figure()
         plt.imshow(recovered_image, cmap='gray')
@@ -115,5 +114,4 @@ def simulate_pulse_shaping():
     plt.grid(True, which='both')
     plt.legend()
     plt.show()
-
 simulate_pulse_shaping()
