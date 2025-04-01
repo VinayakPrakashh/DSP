@@ -71,6 +71,7 @@ for M_values in M:
     subplot(1,2,2)
     imshow(reconstructed_image,cmap = 'grey')
     show()
+    
   BER_res[M_values] = BER_sim
   SER_res[M_values] = SER_sim
   
