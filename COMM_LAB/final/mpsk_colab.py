@@ -42,8 +42,6 @@ def theoretical_ser(M, snr_db):
 
 BER_res = {}
 SER_res = {}
-
-
 for M_values in M:
   bits_per_symbol = int(log2(M_values))
   bitstream = unpackbits(image.flatten())
