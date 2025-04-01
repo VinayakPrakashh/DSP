@@ -75,7 +75,7 @@ def simulate_pulse_shaping():
         recovered_image = np.packbits(recovered_bits).reshape(image.shape)
 
         # Calculate Bit Error Rate (BER)
-        errors = np.sum(recovered_bits != bits)
+        errors = np.sum(recovered_bits != bits) 
         ber = errors / len(bits)
         ber_values.append(ber)
 
