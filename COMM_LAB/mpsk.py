@@ -86,15 +86,12 @@ for M in M_values:
         axes[0].set_ylabel('Imaginary Part')
         axes[0].set_title(f'Received Signal Constellation (M={M}, SNR={snr_db} dB)')
         axes[0].grid(True)
-        
         # Reconstructed Image
         reconstructed_bits = decoded_bits[:len(img.flatten()) * 8]  # Ensure correct number of bits
         reconstructed_image = np.packbits(reconstructed_bits)[:len(img.flatten())].reshape(img.shape)
-        
         axes[1].imshow(reconstructed_image, cmap='gray')
         axes[1].set_title(f'Reconstructed Image (M={M}, SNR={snr_db} dB)')
         axes[1].axis('off')
-        
         plt.tight_layout()
         plt.show()
         
@@ -114,13 +111,11 @@ for M in M_values:
     plt.grid(True, which='both')
     plt.legend()
     plt.show()
-
 # Combined BER & SER plot for all M values
 plt.figure(figsize=(10, 6))
 for M in M_values:
     plt.semilogy(snr_db_range, BER_results[M], marker='o', linestyle='-', label=f'BER M={M}')
     plt.semilogy(snr_db_range, SER_results[M], marker='s', linestyle='--', label=f'SER M={M}')
-    
 plt.xlabel('SNR (dB)')
 plt.ylabel('Error Rate')
 plt.title('Combined BER and SER for MPSK over AWGN Channel')

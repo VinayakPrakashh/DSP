@@ -54,15 +54,29 @@ plt.grid(True)
 plt.show()
 # PCM Modulation for L = 32
 L_pcm = 32
-minval, maxval = np.min(s), np.max(s)
-stepsize = (maxval - minval) / (L_pcm - 1)
-quantizedsignal_pcm = np.round((s - minval) / stepsize) * stepsize + minval
+stepsize_pcm = (max(s) - min(s)) / (L_pcm - 1)
+quantized_signal_pcm = np.round((s - min(s)) / stepsize_pcm)
 
-# Binary encoding
-pcm_encoded = ((quantizedsignal_pcm - minval) / stepsize).astype(int)
-pcm_binary = [np.binary_repr(val, width=int(np.log2(L_pcm))) for val in pcm_encoded]
+# Binary Encoding
+def decimal_to_binary(decimal_values, bits_per_sample):
+    """Converts decimal values to binary representation.
 
-# Display first 10 PCM encoded values as an example
-print("First 10 PCM encoded values:")
-for i in range(10):
-    print(f"Sample {i}: {pcm_binary[i]}")
+    Args:
+        decimal_values: Array of decimal values to encode.
+        bits_per_sample: Number of bits to use for each sample.
+
+    Returns:
+        A 1D numpy array containing the binary sequence.
+    """
+    binary_sequence = []
+    for value in decimal_values:
+        binary = bin(int(value))[2:].zfill(bits_per_sample)  # Convert to binary and pad with zeros
+        binary_sequence.extend([int(bit) for bit in binary])
+    return np.array(binary_sequence)
+
+bits_per_sample_pcm = int(np.log2(L_pcm))  # Number of bits needed
+pcm_output = decimal_to_binary(quantized_signal_pcm, bits_per_sample_pcm)
+
+print("PCM Modulated Output (Binary Sequence):")
+print(pcm_output)
+print("Length of PCM output:",len(pcm_output))
