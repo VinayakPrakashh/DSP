@@ -23,6 +23,7 @@ def srrc_pulse(Tsym, beta, L, Nsym):
     
     return p / np.sqrt(np.sum(p ** 2))
 
+
 def upsample_and_filter(symbols, pulse, L):
     """Upsamples the symbols and applies the SRRC filter."""
     upsampled = np.zeros(len(symbols) * L)
@@ -57,7 +58,7 @@ def simulate_pulse_shaping():
     # Define parameters
     Tsym, beta, L, Nsym = 1, 0.3, 4, 8
     pulse = srrc_pulse(Tsym, beta, L, Nsym)
-    
+    print(pulse)
     # Transmit signal
     transmitted_signal = upsample_and_filter(symbols, pulse, L)
 
