@@ -18,6 +18,7 @@ snr_db_range = arange(-10,11,1)
 
 def modulate(bitstream,M):
   k = int(log2(M))
+  
   bitstream = bitstream.reshape(-1,k)
   symbols = array([int("".join(map(str,b)),2) for b in bitstream])
   angle = 2*pi*symbols/M
