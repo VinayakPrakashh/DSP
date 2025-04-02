@@ -70,8 +70,14 @@ for i, SNR in enumerate(SNR_values):
         nSamples = 3 * L
         nTraces = 100
         samples = downsampled_output[:nSamples * nTraces].reshape(nTraces, nSamples)
+        
+# Create a new figure for the eye diagram
+        plt.figure(figsize=(8, 6))
+
+# Plot each trace
         for trace in samples:
-            axes[i, j * 2 + 1].plot(trace, color='orange', alpha=0.7)
+          plt.plot(trace, color='orange', alpha=0.7)
+
         axes[i, j * 2 + 1].set_title(f'Eye Diagram (SNR={SNR} dB, Beta={beta})', fontsize=10)
         axes[i, j * 2 + 1].grid(True)
         axes[i, j * 2 + 1].set_xticks([])
