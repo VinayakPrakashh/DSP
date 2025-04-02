@@ -15,7 +15,7 @@ def raised_cosine_filter(beta, L, Nsym):
     return p / np.sqrt(np.sum(p ** 2))  # Normalize energy
 
 # Read the image
-image = cv2.imread('/Users/abrahamgeorge/Downloads/cameraman.png', cv2.IMREAD_GRAYSCALE)
+image = cv2.imread('D:/cameraman.png', cv2.IMREAD_GRAYSCALE)
 assert image is not None, "Image not found!"
 
 # Convert pixel values to bits and map to BPSK symbols
