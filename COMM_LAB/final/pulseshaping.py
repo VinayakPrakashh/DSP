@@ -20,7 +20,6 @@ def srrc_pulse(Tsym, beta, L, Nsym):
                    4 * beta * t[i] / Tsym * np.cos(np.pi * t[i] * (1 + beta) / Tsym))
             denom = (np.pi * t[i] / Tsym * (1 - (4 * beta * t[i] / Tsym) ** 2))
             p[i] = num / denom
-    
     return p / np.sqrt(np.sum(p ** 2))
 
 
@@ -40,8 +39,10 @@ def add_awgn(signal, snr_db):
 def downsample_and_demodulate(received_signal, pulse, L, num_bits):
     """Performs matched filtering, downsampling, and demodulation."""
     matched_output = convolve(received_signal, pulse, mode='full')
+    print(matched_output[0:30])
     delay = (len(pulse) - 1) // 2
     sampled = matched_output[2 * delay + 1::L]
+    print(sampled[0:30])
     detected_symbols = np.where(sampled >= 0, 1, -1)
     
     # Ensure the correct number of bits
@@ -54,15 +55,15 @@ def simulate_pulse_shaping():
     image = cv2.imread(r"D:/cameraman.png", cv2.IMREAD_GRAYSCALE)
     bits = np.unpackbits(image.flatten())
     symbols = np.where(bits == 0, -1, 1)  # BPSK Mapping
-
+    print(symbols[0:30])
     # Define parameters
     Tsym, beta, L, Nsym = 1, 0.3, 4, 8
     pulse = srrc_pulse(Tsym, beta, L, Nsym)
-    print(pulse)
     # Transmit signal
     transmitted_signal = upsample_and_filter(symbols, pulse, L)
+    print(transmitted_signal[0:30])
 
-    snr_values = np.arange(-10, 21, 5)  # SNR from -10 dB to 20 dB
+    snr_values = np.arange(10,20,1)  # SNR from -10 dB to 20 dB
     ber_values = []
 
     for snr in snr_values:
