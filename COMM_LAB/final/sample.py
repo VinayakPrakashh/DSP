@@ -1,6 +1,13 @@
 from numpy import *
 from matplotlib.pyplot import *
 from scipy.signal import convolve
+from scipy.special import erfc
+
+def theoretical_ber(snr_db):
+    k = np.log2(2)
+    
+    return erfc(np.sqrt(k * 10**(snr_db / 10)) / np.sqrt(2)) / k
+
 def SRRC(Tsym, Nsym, L, beta):
     t = arange(-Nsym / 2, Nsym / 2, 1 / L)
     p = zeros_like(t)
@@ -24,40 +31,52 @@ def SRRC(Tsym, Nsym, L, beta):
             num = sin(sin_t) + (beta_t * cos(cos_t))
             denom = pi_t * (1 - beta_t ** 2)
             p[i] = comm * (num / denom)
-    return p
-# import matplotlib.pyplot as plt
+    return p / np.sqrt(np.sum(p ** 2))
 
-# pulse = SRRC(Tsym=1, Nsym=6, L=8, beta=0.35)
-# plt.plot(pulse)
-# plt.title("SRRC Pulse")
-# plt.grid(True)
-# plt.show()
-
-def upsample_filter(signal,pulse,L):
-    upsampled = zeros(len(signal)*L)
+def upsample_filter(signal, pulse, L):
+    upsampled = zeros(len(signal) * L)
     upsampled[::L] = signal
-    return convolve(signal,pulse,mode='full')
-def add_noise(signal,snr_db):
-    snr_linear = 10**(snr_db/10)
-    noise_pow = 1/(2*snr_linear)
-    awgn = random.randn(*signal.shape) +(1j*random.randn(*signal.shape))
-    noise = sqrt(noise_pow)* awgn
+    return convolve(upsampled, pulse, mode='full')
+
+def add_noise(signal, snr_db):
+    snr_linear = 10 ** (snr_db / 10)
+    noise_pow = 1 / ( snr_linear)
+    awgn = random.randn(*signal.shape)
+    noise = sqrt(noise_pow) * awgn
     return signal + noise
 
-def downsampled(signal,pulse,L):
+def downsampled(signal, pulse, L, bits):
+    matched_out = convolve(signal, pulse, mode='full')
+    delay = (len(pulse) - 1) // 2
+    sampled_out = matched_out[2 * delay + 1::L]
+    detected_symbols = where(sampled_out >= 0, 1, -1)
+    return detected_symbols[:bits]  # Ensure correct length
 
+# Main simulation
+ber_values = []
 
-
-
-bitstream = random.randint(0,2,10000)
-
-Tsym,Nsym,L,beta = 1,8,4,0.3
-bpsk_mapping = where(bitstream == 0,-1,1)
-print(bpsk_mapping[0:30])
-pulse = SRRC(Tsym,Nsym,L,beta)
-upsampled_signal = upsample_filter(bpsk_mapping,pulse,L)
-snr_db_range = arange(-10,10,5)
+bitstream = random.randint(0, 2, 10000)  # Generate random bitstream
+Tsym, Nsym, L, beta = 1, 8, 4, 0.3  # Parameters
+bpsk_mapping = where(bitstream == 0, -1, 1)  # Map bits to BPSK symbols
+pulse = SRRC(Tsym, Nsym, L, beta)  # Generate SRRC pulse
+upsampled_signal = upsample_filter(bpsk_mapping, pulse, L)  # Pulse shaping
+snr_db_range = arange(-10, 10, 1)  # SNR range in dB
 
 for snr_db in snr_db_range:
-    recieved_signal = add_noise(upsampled_signal,snr_db)
-    
+    recieved_signal = add_noise(upsampled_signal, snr_db)  # Add noise
+    downsampled_bits = downsampled(recieved_signal, pulse, L, len(bitstream))  # Matched filtering and downsampling
+    recovered_bits = where(downsampled_bits ==-1,0,1)
+    print(downsampled_bits)
+    print(bitstream)
+    errors = sum(recovered_bits != bitstream)  # Count bit errors
+    ber = errors / len(bitstream)  # Calculate BER
+    ber_values.append(ber)
+
+# Plot BER curve
+semilogy(snr_db_range, ber_values, 'o-', label="Simulated BER")
+xlabel("SNR (dB)")
+ylabel("Bit Error Rate (BER)")
+title("BER vs SNR Curve")
+grid(True, which="both", linestyle="--")
+legend()
+show()
