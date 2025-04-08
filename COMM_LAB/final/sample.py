@@ -1,70 +1,36 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy.signal import convolve
+from numpy import *
 
-# SRRC Pulse Function
-def srrc_pulse(Tsym, beta, L, Nsym):
-    t = np.arange(-Nsym / 2, Nsym / 2, 1 / L)
-    p = np.zeros_like(t)
-    for i in range(len(t)):
-        if t[i] == 0:
-            p[i] = (1 - beta + 4 * beta / np.pi) / np.sqrt(Tsym)
-        elif abs(t[i]) == Tsym / (4 * beta):
-            p[i] = (beta / np.sqrt(2 * Tsym)) * ((1 + 2 / np.pi) * np.sin(np.pi / (4 * beta)) +
-                                                 (1 - 2 / np.pi) * np.cos(np.pi / (4 * beta)))
-        else:
-            num = (np.sin(np.pi * t[i] * (1 - beta) / Tsym) +
-                   4 * beta * t[i] / Tsym * np.cos(np.pi * t[i] * (1 + beta) / Tsym))
-            denom = (np.pi * t[i] / Tsym * (1 - (4 * beta * t[i] / Tsym) ** 2))
-            p[i] = num / denom
-    return p / np.sqrt(np.sum(p ** 2)), t
+# def SRRC(Tsym, Nsym, L, beta):
+#     t = arange(-Nsym / 2, Nsym / 2, 1 / L)
+#     p = zeros_like(t)
+#     comm = 1 / sqrt(Tsym)
+#     beta_4 = (4 * beta) / pi
+#     abs_1 = 1 + (2 / pi)
+#     abs_2 = 1 - (2 / pi)
+#     sc = pi / (4 * beta)
 
-# Parameters
-Tsym = 1
-L = 8  # Samples per symbol
-beta = 0.35
-Nsym = 6
+#     for i in range(len(t)):
+#         ti = t[i]
+#         if ti == 0:
+#             p[i] = ((1 - beta) + beta_4) * comm
+#         elif abs(ti - Tsym / (4 * beta)) < 1e-6:
+#             p[i] = (abs_1 * sin(sc) + abs_2 * cos(sc)) * comm * (beta / sqrt(2))
+#         else:
+#             sin_t = pi * ti * (1 - beta) / Tsym
+#             cos_t = pi * ti * (1 + beta) / Tsym
+#             beta_t = 4 * beta * ti / Tsym
+#             pi_t = pi * ti / Tsym
+#             num = sin(sin_t) + (beta_t * cos(cos_t))
+#             denom = pi_t * (1 - beta_t ** 2)
+#             p[i] = comm * (num / denom)
 
-# Input symbols
-symbols = np.array([1, 0, -1, 1])
+#     return p
+# import matplotlib.pyplot as plt
 
-# 1. Upsample
-upsampled = np.zeros(len(symbols) * L)
-upsampled[::L] = symbols
+# pulse = SRRC(Tsym=1, Nsym=6, L=8, beta=0.35)
+# plt.plot(pulse)
+# plt.title("SRRC Pulse")
+# plt.grid(True)
+# plt.show()
 
-# 2. SRRC pulse
-srrc, t_srrc = srrc_pulse(Tsym, beta, L, Nsym)
-
-# 3. Convolve
-tx_signal = convolve(upsampled, srrc, mode='full')
-
-# 4. Plotting
-
-plt.figure(figsize=(15, 6))
-
-# Plot 1: Upsampled signal
-plt.subplot(3, 1, 1)
-plt.stem(upsampled)
-plt.title("1. Upsampled Signal")
-plt.xlabel("Sample Index")
-plt.ylabel("Amplitude")
-plt.grid(True)
-
-# Plot 2: SRRC pulse
-plt.subplot(3, 1, 2)
-plt.plot(t_srrc, srrc)
-plt.title("2. SRRC Pulse")
-plt.xlabel("Time")
-plt.ylabel("Amplitude")
-plt.grid(True)
-
-# Plot 3: Convolution Result (Transmit Signal)
-plt.subplot(3, 1, 3)
-plt.plot(tx_signal)
-plt.title("3. Transmit Signal (Upsampled ⊗ SRRC)")
-plt.xlabel("Sample Index")
-plt.ylabel("Amplitude")
-plt.grid(True)
-
-plt.tight_layout()
-plt.show()
+bitstream = random.randint(0,2,10000)
