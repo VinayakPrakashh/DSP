@@ -39,10 +39,9 @@ def add_awgn(signal, snr_db):
 def downsample_and_demodulate(received_signal, pulse, L, num_bits):
     """Performs matched filtering, downsampling, and demodulation."""
     matched_output = convolve(received_signal, pulse, mode='full')
-    print(matched_output[0:30])
     delay = (len(pulse) - 1) // 2
     sampled = matched_output[2 * delay + 1::L]
-    print(sampled[0:30])
+
     detected_symbols = np.where(sampled >= 0, 1, -1)
     
     # Ensure the correct number of bits
@@ -61,7 +60,6 @@ def simulate_pulse_shaping():
     pulse = srrc_pulse(Tsym, beta, L, Nsym)
     # Transmit signal
     transmitted_signal = upsample_and_filter(symbols, pulse, L)
-    print(transmitted_signal[0:30])
 
     snr_values = np.arange(10,20,1)  # SNR from -10 dB to 20 dB
     ber_values = []
@@ -80,6 +78,7 @@ def simulate_pulse_shaping():
         ber = errors / len(bits)
         ber_values.append(ber)
 
+        
         # Plot the reconstructed image
         plt.figure()
         plt.imshow(recovered_image, cmap='gray')
@@ -100,3 +99,4 @@ def simulate_pulse_shaping():
 
 
 simulate_pulse_shaping()
+

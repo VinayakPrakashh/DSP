@@ -2,11 +2,9 @@ from numpy import *
 from matplotlib.pyplot import *
 from scipy.signal import convolve
 from scipy.special import erfc
-
 def theoretical_ber(snr_db):
-    k = np.log2(2)
-    
-    return erfc(np.sqrt(k * 10**(snr_db / 10)) / np.sqrt(2)) / k
+    snr_linear = 10 ** (snr_db / 10)
+    return 0.5 * erfc(np.sqrt(snr_linear))
 
 def SRRC(Tsym, Nsym, L, beta):
     t = arange(-Nsym / 2, Nsym / 2, 1 / L)
@@ -41,8 +39,7 @@ def upsample_filter(signal, pulse, L):
 def add_noise(signal, snr_db):
     snr_linear = 10 ** (snr_db / 10)
     noise_pow = 1 / ( 2*snr_linear)
-    awgn = random.randn(*signal.shape)
-    noise = sqrt(noise_pow) * awgn
+    noise = sqrt(noise_pow) * random.randn(*signal.shape)
     return signal + noise
 
 def downsampled(signal, pulse, L, bits):

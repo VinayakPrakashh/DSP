@@ -1,87 +1,67 @@
 import numpy as np
-import cv2
 import matplotlib.pyplot as plt
 from scipy.signal import convolve
 
-def raised_cosine_filter(beta, L, Nsym):
-    """Generates a Raised Cosine Filter"""
-    t = np.arange(-Nsym / 2, Nsym / 2 + 1 / L, 1 / L)
-    sinc_part = np.sinc(t)
-    cos_part = np.cos(np.pi * beta * t)
-    denom = 1 - (2 * beta * t) ** 2
-    
-    p = sinc_part * cos_part
-    p[denom != 0] /= denom[denom != 0]  # Avoid division by zero
+def srrc_pulse(beta, Nsym, Tsym, L):
+    t = np.arange(-Nsym / 2, Nsym / 2, 1 / L)
+    p = np.zeros_like(t)
+    for i in range(len(t)):
+        if t[i] == 0:
+            p[i] = (1 - beta + 4 * beta / np.pi) / np.sqrt(Tsym)
+        elif abs(t[i]) == Tsym / (4 * beta):
+            t1 = (1 + 2 / np.pi) * np.sin(np.pi / (4 * beta))
+            t2 = (1 - 2 / np.pi) * np.cos(np.pi / (4 * beta))
+            t3 = beta / np.sqrt(2 * Tsym)
+            p[i] = t3 * (t1 + t2)
+        else:
+            num = (np.sin(np.pi * t[i] * (1 - beta) / Tsym) +
+                   4 * beta * t[i] / Tsym * np.cos(np.pi * t[i] * (1 + beta) / Tsym))
+            denom = (np.pi * t[i] / Tsym * (1 - (4 * beta * t[i] / Tsym) ** 2))
+            p[i] = num / denom
     return p / np.sqrt(np.sum(p ** 2))  # Normalize energy
 
-# Read the image
-image = cv2.imread('D:/cameraman.png', cv2.IMREAD_GRAYSCALE)
-assert image is not None, "Image not found!"
+def upsample(bpsk_symbols, pulse, L):
+    upsampled_data = np.zeros(len(bpsk_symbols) * L)
+    upsampled_data[::L] = bpsk_symbols
+    return convolve(upsampled_data, pulse)
 
-# Convert pixel values to bits and map to BPSK symbols
-bits = np.unpackbits(image)
-bpsk_symbols = 2 * bits - 1  # Map 0 -> -1, 1 -> 1
+def awgn_channel(signal, snr_db):
+    snr_linear = 10 ** (snr_db / 10)
+    noise_std = np.sqrt(1 / snr_linear)
+    noise = noise_std * np.random.randn(*signal.shape)
+    return signal + noise
+
+def downsampling(received_signal, pulse, num_bits, L):
+    matched_filter_out = convolve(received_signal, pulse)
+    # delay = (len(pulse) - 1) // 2
+    # downsampled = matched_filter_out[2 * delay + 1::L]
+    # detected_bpsk_symbols = np.where(downsampled >= 0, 1, -1)
+    return  matched_filter_out
 
 # Parameters
-L = 4  # Upsampling factor
-Tsym = 1  # Symbol duration
-Nsym = 8  # Filter length in symbols
-SNR_values = [-10, -5, 5, 10]
-beta_values = [0.2, 0.8]
+num_bits = 10000
+input_bits = np.random.randint(0, 2, num_bits)
+bpsk_symbols = 2 * input_bits - 1
+Tsym, beta, L, Nsym = 1, 0.3, 4, 8
+pulse = srrc_pulse(beta, Nsym, Tsym, L)
+transmitted_signal = upsample(bpsk_symbols, pulse, L)
 
-fig, axes = plt.subplots(len(SNR_values), len(beta_values) * 2, figsize=(24, 12))
+snr_values = [-10, 0, 10]  # Eye diagram for 3 different SNRs
 
-for i, SNR in enumerate(SNR_values):
-    for j, beta in enumerate(beta_values):
-        print(f"Processing SNR={SNR} dB, Beta={beta}")
-        
-        # Generate Raised Cosine filter
-        p = raised_cosine_filter(beta, L, Nsym)
-        
-        # Upsampling
-        upsampled_symbols = np.zeros(L * len(bpsk_symbols))
-        upsampled_symbols[::L] = bpsk_symbols
-        
-        # Pulse shaping
-        shaped_signal = convolve(upsampled_symbols, p, mode='same')
-        
-        # Add Gaussian noise
-        noise_power = 1 / (2 * (10 ** (SNR / 10)))
-        noise = np.sqrt(noise_power) * (np.random.randn(len(shaped_signal)) + 1j * np.random.randn(len(shaped_signal)))
-        received_signal = shaped_signal + noise
-        
-        # Matched filtering
-        g = p[::-1]  # Matched filter
-        matched_output = convolve(received_signal, g, mode='same')
-        
-        # Downsampling and demapping
-        downsampled_output = matched_output[::L]
-        demapped_bits = (downsampled_output.real > 0).astype(np.uint8)
-        
-        # Convert bits to pixel values
-        received_image = np.packbits(demapped_bits).reshape(image.shape)
-        
-        # Plot Reconstructed Image
-        axes[i, j * 2].imshow(received_image, cmap='gray')
-        axes[i, j * 2].set_title(f"Reconstructed Image (SNR={SNR} dB, Beta={beta})", fontsize=10)
-        axes[i, j * 2].axis('off')
-        
-        # Plot Eye Diagram
-        nSamples = 3 * L
-        nTraces = 100
-        samples = downsampled_output[:nSamples * nTraces].reshape(nTraces, nSamples)
-        
-# Create a new figure for the eye diagram
-        plt.figure(figsize=(8, 6))
+for snr in snr_values:
+    received_signal = awgn_channel(transmitted_signal, snr)
+    matched_output = downsampling(received_signal, pulse, num_bits, L)
 
-# Plot each trace
-        for trace in samples:
-          plt.plot(trace, color='orange', alpha=0.7)
+    # Plot Eye Diagram
+    num_traces = 100
+    samples_per_eye = 3 * L
+    eye_data = matched_output[:num_traces * samples_per_eye].reshape(num_traces, samples_per_eye)
 
-        axes[i, j * 2 + 1].set_title(f'Eye Diagram (SNR={SNR} dB, Beta={beta})', fontsize=10)
-        axes[i, j * 2 + 1].grid(True)
-        axes[i, j * 2 + 1].set_xticks([])
-        axes[i, j * 2 + 1].set_yticks([])
-
-plt.subplots_adjust(wspace=0.3, hspace=0.3)
-plt.show()
+    plt.figure(figsize=(6, 4))
+    for trace in eye_data:
+        plt.plot(trace, color='blue', alpha=0.5)
+    plt.title(f"Eye Diagram at SNR = {snr} dB")
+    plt.xlabel("Sample Index")
+    plt.ylabel("Amplitude")
+    plt.grid(True)
+    plt.show()
