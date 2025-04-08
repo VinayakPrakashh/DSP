@@ -1,74 +1,102 @@
-from numpy import *
-from matplotlib.pyplot import *
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
 from scipy.signal import convolve
 
-def SRRC(Tsym, Nsym, L, beta):
-    t = arange(-Nsym / 2, Nsym / 2, 1 / L)
-    p = zeros_like(t)
-    comm = 1 / sqrt(Tsym)
-    beta_4 = (4 * beta) / pi
-    abs_1 = 1 + (2 / pi)
-    abs_2 = 1 - (2 / pi)
-    sc = pi / (4 * beta)
-
+def srrc_pulse(Tsym, beta, L, Nsym):
+    """Generates a Square-Root Raised Cosine (SRRC) pulse while handling singularities."""
+    t = np.arange(-Nsym / 2, Nsym / 2, 1 / L)
+    p = np.zeros_like(t)
+    
     for i in range(len(t)):
-        ti = t[i]
-        if ti == 0:
-            p[i] = ((1 - beta) + beta_4) * comm
-        elif abs(ti - Tsym / (4 * beta)) < 1e-6:
-            p[i] = (abs_1 * sin(sc) + abs_2 * cos(sc)) * comm * (beta / sqrt(2))
+        if t[i] == 0:
+            p[i] = (1 - beta + 4 * beta / np.pi) / np.sqrt(Tsym)
+        elif abs(t[i]) == Tsym / (4 * beta):
+            p[i] = (beta / np.sqrt(2 * Tsym)) * (
+                (1 + 2 / np.pi) * np.sin(np.pi / (4 * beta)) + (1 - 2 / np.pi) * np.cos(np.pi / (4 * beta))
+            )
         else:
-            sin_t = pi * ti * (1 - beta) / Tsym
-            cos_t = pi * ti * (1 + beta) / Tsym
-            beta_t = 4 * beta * ti / Tsym
-            pi_t = pi * ti / Tsym
-            num = sin(sin_t) + (beta_t * cos(cos_t))
-            denom = pi_t * (1 - beta_t ** 2)
-            p[i] = comm * (num / denom)
+            num = (np.sin(np.pi * t[i] * (1 - beta) / Tsym) +
+                   4 * beta * t[i] / Tsym * np.cos(np.pi * t[i] * (1 + beta) / Tsym))
+            denom = (np.pi * t[i] / Tsym * (1 - (4 * beta * t[i] / Tsym) ** 2))
+            p[i] = num / denom
     return p / np.sqrt(np.sum(p ** 2))
 
-def upsample_filter(signal, pulse, L):
-    upsampled = zeros(len(signal) * L)
-    upsampled[::L] = signal
+
+def upsample_and_filter(symbols, pulse, L):
+    """Upsamples the symbols and applies the SRRC filter."""
+    upsampled = np.zeros(len(symbols) * L)
+    upsampled[::L] = symbols    
     return convolve(upsampled, pulse, mode='full')
 
-def add_noise(signal, snr_db):
+def add_awgn(signal, snr_db):
+    """Adds AWGN noise to the signal based on SNR (dB)."""
     snr_linear = 10 ** (snr_db / 10)
-    noise_pow = 1 / ( snr_linear)
-    awgn = random.randn(*signal.shape)
-    noise = sqrt(noise_pow) * awgn
+    noise_power = 1 / (2 * snr_linear)
+    noise = np.sqrt(noise_power) * np.random.randn(*signal.shape)
     return signal + noise
 
-def downsampled(signal, pulse, L, bits):
-    matched_out = convolve(signal, pulse, mode='full')
+def downsample_and_demodulate(received_signal, pulse, L, num_bits):
+    """Performs matched filtering, downsampling, and demodulation."""
+    matched_output = convolve(received_signal, pulse, mode='full')
+    print(matched_output[0:30])
     delay = (len(pulse) - 1) // 2
-    sampled_out = matched_out[2 * delay + 1::L]
-    detected_symbols = where(sampled_out >= 0, 1, -1)
-    return detected_symbols[:bits]  # Ensure correct length
+    sampled = matched_output[2 * delay + 1::L]
+    print(sampled[0:30])
+    detected_symbols = np.where(sampled >= 0, 1, -1)
+    
+    # Ensure the correct number of bits
+    return detected_symbols[:num_bits]
 
-# Main simulation
-ber_values = []
+def simulate_pulse_shaping():
+    """Runs the full pulse shaping simulation and plots SNR vs BER."""
+    
+    # Load image and convert to binary
+    image = cv2.imread(r"D:/cameraman.png", cv2.IMREAD_GRAYSCALE)
+    bits = np.unpackbits(image.flatten())
+    symbols = np.where(bits == 0, -1, 1)  # BPSK Mapping
+    print(symbols[0:30])
+    # Define parameters
+    Tsym, beta, L, Nsym = 1, 0.3, 4, 8
+    pulse = srrc_pulse(Tsym, beta, L, Nsym)
+    # Transmit signal
+    transmitted_signal = upsample_and_filter(symbols, pulse, L)
+    print(transmitted_signal[0:30])
 
-bitstream = random.randint(0, 2, 10000)  # Generate random bitstream
-Tsym, Nsym, L, beta = 1, 8, 4, 0.3  # Parameters
-bpsk_mapping = where(bitstream == 0, -1, 1)  # Map bits to BPSK symbols
-pulse = SRRC(Tsym, Nsym, L, beta)  # Generate SRRC pulse
-upsampled_signal = upsample_filter(bpsk_mapping, pulse, L)  # Pulse shaping
-snr_db_range = arange(-10, 10, 1)  # SNR range in dB
+    snr_values = np.arange(10,20,1)  # SNR from -10 dB to 20 dB
+    ber_values = []
 
-for snr_db in snr_db_range:
-    recieved_signal = add_noise(upsampled_signal, snr_db)  # Add noise
-    downsampled_bits = downsampled(recieved_signal, pulse, L, len(bitstream))  # Matched filtering and downsampling
-    recovered_bits = where(downsampled_bits ==-1,0,1)
-    errors = sum(recovered_bits != bitstream)  # Count bit errors
-    ber = errors / len(bitstream)  # Calculate BER
-    ber_values.append(ber)
+    for snr in snr_values:
+        received_signal = add_awgn(transmitted_signal, snr)
+        detected_symbols = downsample_and_demodulate(received_signal, pulse, L, len(bits))
+        
+        # Ensure the correct number of bits before reshaping
+        recovered_bits = (detected_symbols == 1).astype(np.uint8)
+        recovered_bits = np.pad(recovered_bits, (0, 8 - len(recovered_bits) % 8), mode='constant')[:len(bits)]
+        recovered_image = np.packbits(recovered_bits).reshape(image.shape)
 
-# Plot BER curve
-semilogy(snr_db_range, ber_values, 'o-', label="Simulated BER")
-xlabel("SNR (dB)")
-ylabel("Bit Error Rate (BER)")
-title("BER vs SNR Curve")
-grid(True, which="both", linestyle="--")
-legend()
-show()
+        # Calculate Bit Error Rate (BER)
+        errors = np.sum(recovered_bits != bits) 
+        ber = errors / len(bits)
+        ber_values.append(ber)
+
+        # Plot the reconstructed image
+        plt.figure()
+        plt.imshow(recovered_image, cmap='gray')
+        plt.title(f'Reconstructed Image at SNR={snr} dB')
+        plt.axis('off')
+        plt.show()
+
+    # Plot SNR vs BER Curve
+    plt.figure()
+    plt.semilogy(snr_values, ber_values, 'o-', label="Simulated BER")
+    plt.xlabel("SNR (dB)")
+    plt.ylabel("Bit Error Rate (BER)")
+    plt.title("SNR vs BER Curve")
+    plt.grid(True, which='both')
+    plt.legend()
+    plt.show()
+
+
+
+simulate_pulse_shaping()

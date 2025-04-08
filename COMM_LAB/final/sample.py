@@ -40,7 +40,7 @@ def upsample_filter(signal, pulse, L):
 
 def add_noise(signal, snr_db):
     snr_linear = 10 ** (snr_db / 10)
-    noise_pow = 1 / ( snr_linear)
+    noise_pow = 1 / ( 2*snr_linear)
     awgn = random.randn(*signal.shape)
     noise = sqrt(noise_pow) * awgn
     return signal + noise
@@ -54,6 +54,7 @@ def downsampled(signal, pulse, L, bits):
 
 # Main simulation
 ber_values = []
+theor_ber = []
 
 bitstream = random.randint(0, 2, 10000)  # Generate random bitstream
 Tsym, Nsym, L, beta = 1, 8, 4, 0.3  # Parameters
@@ -66,14 +67,17 @@ for snr_db in snr_db_range:
     recieved_signal = add_noise(upsampled_signal, snr_db)  # Add noise
     downsampled_bits = downsampled(recieved_signal, pulse, L, len(bitstream))  # Matched filtering and downsampling
     recovered_bits = where(downsampled_bits ==-1,0,1)
-    print(downsampled_bits)
-    print(bitstream)
     errors = sum(recovered_bits != bitstream)  # Count bit errors
+    err_t = theoretical_ber(snr_db)
     ber = errors / len(bitstream)  # Calculate BER
+    ber_t = err_t/len(bitstream)
+
     ber_values.append(ber)
+    theor_ber.append(ber_t)
 
 # Plot BER curve
-semilogy(snr_db_range, ber_values, 'o-', label="Simulated BER")
+semilogy(snr_db_range, ber_values, 'o-', label="Simulated BER")  # Simulated BER
+semilogy(snr_db_range, theor_ber, 'o--', label="Theoretical BER")  # Theoretical BER
 xlabel("SNR (dB)")
 ylabel("Bit Error Rate (BER)")
 title("BER vs SNR Curve")
