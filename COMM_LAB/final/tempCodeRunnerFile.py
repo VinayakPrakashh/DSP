@@ -1,1 +1,1 @@
-N0
+print(bitstream)
