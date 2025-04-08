@@ -54,9 +54,8 @@ for snr in snr_values:
 
     # Plot Eye Diagram
     num_traces = 100
-    samples_per_eye = 3 * L
+    samples_per_eye = 3* L
     eye_data = matched_output[:num_traces * samples_per_eye].reshape(num_traces, samples_per_eye)
-
     plt.figure(figsize=(6, 4))
     for trace in eye_data:
         plt.plot(trace, color='blue', alpha=0.5)

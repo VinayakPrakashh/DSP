@@ -93,11 +93,11 @@ for M_values in M:
   show()
 figure(figsize=(10, 6))
 for M in M_values:
-    semilogy(snr_db_range, BER_res[M], marker='o', linestyle='-', label=f'BER M={M}')
+    semilogy(snr_db_range, BER_res[M],    marker='o', linestyle='-', label=f'BER M={M}')
     semilogy(snr_db_range, SER_res[M], marker='s', linestyle='--', label=f'SER M={M}')
     
 xlabel('SNR (dB)')
-ylabel('Error Rate')
+ylabel('Error Rate ')
 title('Combined BER and SER for MPSK over AWGN Channel')
 grid(True, which='both')
 legend()
