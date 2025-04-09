@@ -24,12 +24,11 @@ def noise(SNR_dB, n):
     return np.random.normal(0, np.sqrt(N0 / 2), n)
 
 # Plot eye diagrams
-fig, axes = plt.subplots(2, 2, figsize=(10, 10))  # 4 plots for 4 SNRs
-axes = axes.flatten()
+plt.figure(figsize=(10, 10))  # Create a figure
 
 for idx, SNR in enumerate(SNR_values):
     received = signal + noise(SNR, len(signal))  # Add noise
-    ax = axes[idx]
+    plt.subplot(2, 2, idx + 1)  # Create a 2x2 grid of subplots
     for k in range(n_traces):
         start = k * n_samples
         end = start + n_samples + 1
@@ -37,9 +36,11 @@ for idx, SNR in enumerate(SNR_values):
             break
         segment = received[start:end]
         t = np.linspace(0, len(segment) - 1, len(segment)) / L
-        ax.plot(t, segment, color='blue', alpha=0.6)
-    ax.set_title(f"Eye Diagram (SNR = {SNR} dB)")
-    ax.grid(True)
+        plt.plot(t, segment, color='blue', alpha=0.6)
+    plt.title(f"Eye Diagram (SNR = {SNR} dB)")
+    plt.grid(True)
+    plt.xlabel("Time")
+    plt.ylabel("Amplitude")
 
 plt.tight_layout()
 plt.show()
