@@ -20,7 +20,7 @@ def add_awgn(signal,snr_db,bits_per_symbol):
     noise_std = np.sqrt(1 / (2 * bits_per_symbol * snr_linear))
     noise = noise_std * (np.random.randn(*signal.shape) + 1j * np.random.randn(*signal.shape))
     return signal + noise
-snr_db_range = arange(-10,10,1)
+snr_db_range = arange(-10,11,5)
 def demod(signal,M):
     angles = angle(signal)
     decoded_symbols = np.round( ( angles/(2*pi) )*M )%M
@@ -41,6 +41,8 @@ for M in M_values:
       theoretical = theoretical_ber(snr_db)
       t_ber = theoretical/len(bitstream)
       theoretical_ber_array.append(t_ber)
+      scatter(recieved_signal.real,recieved_signal.imag,s=1)
+      show()
     semilogy(snr_db_range,bit_error_array)
     semilogy(snr_db_range,theoretical_ber_array)
     show()
