@@ -44,7 +44,7 @@ def downsample_and_demodulate(received_signal, pulse, L, num_bits):
     detected_symbols = np.where(sampled >= 0, 1, -1)
     
     # Ensure the correct number of bits
-    return detected_symbols[:num_bits]
+    return detected_symbols[:num_bits]  
 
 def simulate_pulse_shaping():
     """Runs the full pulse shaping simulation and plots SNR vs BER."""
