@@ -28,6 +28,7 @@ def add_awgn(snr,num_bits):
 
 for idx,snr in enumerate(SNR_values):
     recieved = transmitted_symbols + add_awgn(snr,len(bits))
+    subplot(2,2,idx+1)
     for k in n_traces:
         start = k*N_Symbols
         end = start + N_Symbols + 1
