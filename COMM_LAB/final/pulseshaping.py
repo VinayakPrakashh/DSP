@@ -20,6 +20,7 @@ def srrc_pulse(Tsym, beta, L, Nsym):
                    4 * beta * t[i] / Tsym * np.cos(np.pi * t[i] * (1 + beta) / Tsym))
             denom = (np.pi * t[i] / Tsym * (1 - (4 * beta * t[i] / Tsym) ** 2))
             p[i] = num / denom
+    plt.plot(t,p)
     return p / np.sqrt(np.sum(p ** 2))
 
 def upsample_and_filter(symbols, pulse, L):
