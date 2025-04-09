@@ -45,7 +45,6 @@ def downsample_and_demodulate(received_signal, pulse, L, num_symbols):
     sampled = matched_output[2 * delay + 1::L]
 
     detected_symbols = demod(sampled,4)
-    print(detected_symbols)
     return detected_symbols
 def modulate(bitstream,M):
     bit_group = bitstream.reshape(-1,2)
@@ -69,8 +68,8 @@ def simulate_qpsk_pulse_shaping():
     
     # Transmit signal
     transmitted_signal = upsample_and_filter(symbols, pulse, L)
-
-    snr_values = np.arange(10, 20, 1)  # SNR from 10 dB to 20 dB
+    
+    snr_values = np.arange(-10, 10, 1)  # SNR from 10 dB to 20 dB
     ber_values = []
 
     for snr in snr_values:
@@ -79,6 +78,7 @@ def simulate_qpsk_pulse_shaping():
         decoded_bits = np.array([list(np.binary_repr(s,width=2)) for s in detected_symbols]).astype(int).flatten()
         
         bit_error = np.sum(decoded_bits[:len(bits)] != bits)
+        print(bit_error)
         ber = bit_error / len(bits)
         ber_values.append(ber)
 
@@ -87,7 +87,7 @@ def simulate_qpsk_pulse_shaping():
     plt.semilogy(snr_values, ber_values, 'o-', label="Simulated BER")
     plt.xlabel("SNR (dB)")
     plt.ylabel("Bit Error Rate (BER)")
-    plt.title("SNR vs BER Curve for QPSK")
+    plt.title("SNR vs BER Curve")
     plt.grid(True, which='both')
     plt.legend()
     plt.show()
