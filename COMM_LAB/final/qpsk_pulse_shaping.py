@@ -1,0 +1,95 @@
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+from scipy.signal import convolve
+
+def srrc_pulse(Tsym, beta, L, Nsym):
+    """Generates a Square-Root Raised Cosine (SRRC) pulse while handling singularities."""
+    t = np.arange(-Nsym / 2, Nsym / 2, 1 / L)
+    p = np.zeros_like(t)
+    
+    for i in range(len(t)):
+        if t[i] == 0:
+            p[i] = (1 - beta + 4 * beta / np.pi) / np.sqrt(Tsym)
+        elif abs(t[i]) == Tsym / (4 * beta):
+            p[i] = (beta / np.sqrt(2 * Tsym)) * (
+                (1 + 2 / np.pi) * np.sin(np.pi / (4 * beta)) + (1 - 2 / np.pi) * np.cos(np.pi / (4 * beta))
+            )
+        else:
+            num = (np.sin(np.pi * t[i] * (1 - beta) / Tsym) +
+                   4 * beta * t[i] / Tsym * np.cos(np.pi * t[i] * (1 + beta) / Tsym))
+            denom = (np.pi * t[i] / Tsym * (1 - (4 * beta * t[i] / Tsym) ** 2))
+            p[i] = num / denom
+    return p / np.sqrt(np.sum(p ** 2))
+
+def upsample_and_filter(symbols, pulse, L):
+    """Upsamples the symbols and applies the SRRC filter."""
+    upsampled = np.zeros(len(symbols) * L)
+    upsampled[::L] = symbols    
+    return convolve(upsampled, pulse, mode='full')
+def demod(signal,M):
+    angles = np.angle(signal)
+    decoded_symbols = np.round( ( angles/(2*np.pi) )*M )%M
+    return decoded_symbols.astype(int)
+def add_awgn(signal, snr_db):
+    """Adds AWGN noise to the signal based on SNR (dB)."""
+    snr_linear = 10 ** (snr_db / 10)
+    noise_power = 1 / (2 * snr_linear)
+    noise = np.sqrt(noise_power) * (np.random.randn(*signal.shape) + 1j * np.random.randn(*signal.shape))
+    return signal + noise
+
+def downsample_and_demodulate(received_signal, pulse, L, num_symbols):
+    """Performs matched filtering, downsampling, and QPSK demodulation."""
+    matched_output = convolve(received_signal, pulse, mode='full')
+    delay = (len(pulse) - 1) // 2
+    sampled = matched_output[2 * delay + 1::L]
+
+    detected_symbols = demod(sampled,4)
+    print(detected_symbols)
+    return detected_symbols
+def modulate(bitstream,M):
+    bit_group = bitstream.reshape(-1,2)
+
+    symbols = np.array([int("".join(map(str,b)),2) for b in bit_group])
+    print(symbols)
+    angle = 2*np.pi*symbols/M
+    return np.cos(angle) + 1j*np.sin(angle)
+
+def simulate_qpsk_pulse_shaping():
+    """Runs the full QPSK pulse shaping simulation and plots SNR vs BER."""
+    
+    bits = np.random.randint(0,2,10000)
+    bits= bits[:len(bits)-( len(bits) % 2 )]
+    # QPSK Mapping
+    symbols = modulate(bits,4)
+
+    # Define parameters
+    Tsym, beta, L, Nsym = 1, 0.3, 4, 8
+    pulse = srrc_pulse(Tsym, beta, L, Nsym)
+    
+    # Transmit signal
+    transmitted_signal = upsample_and_filter(symbols, pulse, L)
+
+    snr_values = np.arange(10, 20, 1)  # SNR from 10 dB to 20 dB
+    ber_values = []
+
+    for snr in snr_values:
+        received_signal = add_awgn(transmitted_signal, snr)
+        detected_symbols = downsample_and_demodulate(received_signal, pulse, L, len(symbols))
+        decoded_bits = np.array([list(np.binary_repr(s,width=2)) for s in detected_symbols]).astype(int).flatten()
+        
+        bit_error = np.sum(decoded_bits[:len(bits)] != bits)
+        ber = bit_error / len(bits)
+        ber_values.append(ber)
+
+    # Plot SNR vs BER Curve
+    plt.figure()
+    plt.semilogy(snr_values, ber_values, 'o-', label="Simulated BER")
+    plt.xlabel("SNR (dB)")
+    plt.ylabel("Bit Error Rate (BER)")
+    plt.title("SNR vs BER Curve for QPSK")
+    plt.grid(True, which='both')
+    plt.legend()
+    plt.show()
+
+simulate_qpsk_pulse_shaping()
