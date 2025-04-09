@@ -5,14 +5,14 @@ import matplotlib.pyplot as plt
 L = 4  # Oversampling factor
 n_samples = 3 * L  # Samples per trace in eye diagram
 n_traces = 100  # Number of eye diagram traces
-SNR_values = [-10, -5, 0, 5]
+SNR_values = [-10, -5, 0, 5,10]
 N_bits = 1000  # Total number of random bits
 
 # Generate random bits
 bits = np.random.randint(0, 2, N_bits)
 
 # BPSK Modulation: 0 -> -1, 1 -> +1
-symbols = np.array([1 if bit else -1 for bit in bits])
+symbols = np.where(bits == 0,-1,1)
 
 # Upsample (insert L-1 zeros between samples)
 signal = np.zeros(len(symbols) * L)
@@ -28,7 +28,7 @@ plt.figure(figsize=(10, 10))  # Create a figure
 
 for idx, SNR in enumerate(SNR_values):
     received = signal + noise(SNR, len(signal))  # Add noise
-    plt.subplot(2, 2, idx + 1)  # Create a 2x2 grid of subplots
+    plt.subplot(2, 3, idx + 1)  # Create a 2x2 grid of subplots
     for k in range(n_traces):
         start = k * n_samples
         end = start + n_samples + 1

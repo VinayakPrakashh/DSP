@@ -5,14 +5,25 @@ import matplotlib.pyplot as plt
 L = 4  # Oversampling factor
 n_samples = 3 * L  # Samples per trace in eye diagram
 n_traces = 100  # Number of eye diagram traces
-SNR_values = [-10, -5, 0, 5]
+SNR_values = [-10, -5, 0, 5,10]
 N_bits = 1000  # Total number of random bits
 
 # Generate random bits
 bits = np.random.randint(0, 2, N_bits)
 
-# BPSK Modulation: 0 -> -1, 1 -> +1
-symbols = np.array([1 if bit else -1 for bit in bits])
+# QPSK Modulation: Map bit pairs to QPSK symbols using a dictionary
+bit_to_symbol = {
+    (0, 0): 1 + 1j,
+    (0, 1): -1 + 1j,
+    (1, 0): 1 - 1j,
+    (1, 1): -1 - 1j
+}
+
+# Reshape bits into pairs
+bit_pairs = bits.reshape(-1, 2)
+
+# Map bit pairs to QPSK symbols
+symbols = np.array([bit_to_symbol[tuple(pair)] for pair in bit_pairs])
 
 # Upsample (insert L-1 zeros between samples)
 signal = np.zeros(len(symbols) * L)
@@ -24,12 +35,11 @@ def noise(SNR_dB, n):
     return np.random.normal(0, np.sqrt(N0 / 2), n)
 
 # Plot eye diagrams
-fig, axes = plt.subplots(2, 2, figsize=(10, 10))  # 4 plots for 4 SNRs
-axes = axes.flatten()
+plt.figure(figsize=(10, 10))  # Create a figure
 
 for idx, SNR in enumerate(SNR_values):
     received = signal + noise(SNR, len(signal))  # Add noise
-    ax = axes[idx]
+    plt.subplot(2, 3, idx + 1)  # Create a 2x2 grid of subplots
     for k in range(n_traces):
         start = k * n_samples
         end = start + n_samples + 1
@@ -37,9 +47,11 @@ for idx, SNR in enumerate(SNR_values):
             break
         segment = received[start:end]
         t = np.linspace(0, len(segment) - 1, len(segment)) / L
-        ax.plot(t, segment, color='blue', alpha=0.6)
-    ax.set_title(f"Eye Diagram (SNR = {SNR} dB)")
-    ax.grid(True)
+        plt.plot(t, segment, color='blue', alpha=0.6)
+    plt.title(f"Eye Diagram (SNR = {SNR} dB)")
+    plt.grid(True)
+    plt.xlabel("Time")
+    plt.ylabel("Amplitude")
 
 plt.tight_layout()
 plt.show()

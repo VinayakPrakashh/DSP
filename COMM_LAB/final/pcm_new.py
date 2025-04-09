@@ -1,11 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Generate random variables
+# Generate a normally distributed random variable
 np.random.seed(42)  # For reproducibility
-num_samples = 1000
-random_signal = np.random.uniform(-1, 1, num_samples)  # Random signal between -1 and 1
-
+num_samples = 10000
+mean = 0  # Mean of the distribution
+std_dev = 1  # Standard deviation of the distribution
+random_signal = np.random.normal(mean, std_dev, num_samples)
 # Define bit depths (N values)
 N_values = range(2, 7)  # N varies from 2 to 6
 SQNR_values = []

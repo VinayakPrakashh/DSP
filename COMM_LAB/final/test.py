@@ -1,38 +1,27 @@
-from numpy import *
-from matplotlib.pyplot import *
-from scipy.signal import convolve
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import norm
 
+# Generate a normally distributed random variable
+np.random.seed(42)  # For reproducibility
+num_samples = 10000
+mean = 0  # Mean of the distribution
+std_dev = 1  # Standard deviation of the distribution
+random_variable = np.random.normal(mean, std_dev, num_samples)
 
-L = 4
-n_traces = 100
-SNR_values = [-10, -5, 0, 5]
-N_Symbols = 3*L
+# Plot the histogram
+plt.figure(figsize=(8, 5))
+count, bins, _ = plt.hist(random_variable, bins=50, density=True, alpha=0.6, color='blue', label="Histogram")
 
-N_samples = 1000
-#generate bits
-bits = random.randint(0,2,N_samples)
+# Overlay the theoretical Gaussian curve
+x = np.linspace(min(bins), max(bins), 1000)
+pdf = norm.pdf(x, mean, std_dev)  # Gaussian PDF
+plt.plot(x, pdf, 'r-', label="Theoretical Gaussian Curve")
 
-#bpsk_mapping
-symbols = where(bits ==0,-1,1)
-
-# upsample
-
-transmitted_symbols = zeros(len(bits)*L)
-transmitted_symbols[::L] = symbols
-
-
-#add noise
-def add_awgn(snr,num_bits):
-    N0 = 1/(10**(snr/10))
-    return random.normal(0,sqrt(N0/2),num_bits)
-
-for idx,snr in enumerate(SNR_values):
-    recieved = transmitted_symbols + add_awgn(snr,len(bits))
-    subplot(2,2,idx+1)
-    for k in n_traces:
-        start = k*N_Symbols
-        end = start + N_Symbols + 1
-        if end >= len(bits):
-            break
-        segment = recieved[start:end]
-        t = linspace(0,len(segment)-1,len(segment)) / L
+# Add labels and legend
+plt.title("Histogram of Normally Distributed Random Variable")
+plt.xlabel("Value")
+plt.ylabel("Density")
+plt.legend()
+plt.grid(True)
+plt.show()
