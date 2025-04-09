@@ -78,7 +78,6 @@ def simulate_qpsk_pulse_shaping():
         decoded_bits = np.array([list(np.binary_repr(s,width=2)) for s in detected_symbols]).astype(int).flatten()
         
         bit_error = np.sum(decoded_bits[:len(bits)] != bits)
-        print(bit_error)
         ber = bit_error / len(bits)
         ber_values.append(ber)
 
