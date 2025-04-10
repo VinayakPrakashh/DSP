@@ -23,11 +23,11 @@ def noise(SNR_dB, n):
     N0 = 1 / (10 ** (SNR_dB / 10))
     return np.random.normal(0, np.sqrt(N0 / 2), n)
 
-# Plot eye diagrams
+# Plot eye diagrams 
 plt.figure(figsize=(10, 10))  # Create a figure
 
 for idx, SNR in enumerate(SNR_values):
-    received = signal + noise(SNR, len(signal))  # Add noise
+    received =   + noise(SNR, len(signal))  # Add noise
     plt.subplot(2, 3, idx + 1)  # Create a 2x2 grid of subplots
     for k in range(n_traces):
         start = k * n_samples
