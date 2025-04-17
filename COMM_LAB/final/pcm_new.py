@@ -27,8 +27,10 @@ for N in N_values:
     SQNR = 10 * np.log10(signal_power / noise_power)
     SQNR_values.append(SQNR)
     
+
+    
     # Display PCM encoded output for N=4
-    if N == 4:
+if N == 4:
         quantized_indices = np.round((random_signal - minval) / stepsize).astype(int)
         bits_per_sample = N
         pcm_output = []
